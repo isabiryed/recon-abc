@@ -91,11 +91,16 @@ class Transactions(models.Model):
     response_code = models.CharField(db_column='RESPONSE_CODE', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
     transaction_status = models.CharField(db_column='TRANSACTION_STATUS', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
     processing_code = models.CharField(db_column='PROCESSING_CODE', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    issuer_classification = models.CharField(db_column='ISSUER_CLASSIFICATION', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    issuer_bank = models.CharField(db_column='ISSUER_BANK', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    acquirer_bank = models.CharField(db_column='ACQUIRER_BANK', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    issuer_bank_name = models.CharField(db_column='ISSUER_BANK_NAME', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    acquirer_bank_name = models.CharField(db_column='ACQUIRER_BANK_NAME', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
     Tel_num = models.CharField(db_column='TEL_NUMBER', max_length=255, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
     
     class Meta:
         managed = False
-        db_table = 'Transactions'        
+        db_table = 'Transactions'     
         
 def validate_file_extension(value):
     if(value.file.content_type not in ['application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']):
