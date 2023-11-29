@@ -58,7 +58,7 @@ def reconcileMain(path, bank_code, user):
         if not dbextract.empty:                
             unique_dbextract = remove_duplicates(dbextract, 'TRN_REF')
             datadump = backup_refs(unique_dbextract, 'TRN_REF')
-            requestedRows = len(datadump[datadump['RESPONSE_CODE'] == '00'])                
+            requestedRows = len(datadump[(datadump['RESPONSE_CODE'] == '00') & (datadump['AMOUNT'] != 0)])        
 
             # Clean and format columns in the datadump
             db_preprocessed = pre_processing(datadump)
