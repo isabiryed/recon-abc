@@ -66,7 +66,7 @@ ROOT_URLCONF = 'abc_recon.urls'
 
 CORS_ALLOWED_ORIGINS = os.getenv("FRONT_ENDS").split(",")
 
-CSRF_TRUSTED_ORIGINS = ["https://localhost:444"]
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS").split(",")
 
 TEMPLATES = [
     {
