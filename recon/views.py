@@ -1,11 +1,15 @@
 import io
+import json
 import logging
 import os
 import datetime as dt
 from zipfile import ZipFile
 
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse, Http404
+from django.views import View
 from django.db.models import Q, F, Case, When, Value, CharField
+from django.db.models.functions import Cast
+from django.http import HttpResponse
 
 import pandas as pd
 from openpyxl import load_workbook
@@ -14,7 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from recon.mainFile import reconcileMain
+from recon.index import reconcileMain
 from recon.setlement_ import setleSabs, settle
 from recon.utils import unserializable_floats
 from .models import Recon, ReconLog, UploadedFile, Bank, UserBankMapping, Transactions
@@ -24,6 +28,9 @@ from .serializers import (
 )
 
 current_date = dt.date.today().strftime('%Y-%m-%d')
+# Get the current date and time
+current_datetime = dt.datetime.now()
+current_day = current_datetime.replace(hour=23, minute=59, second=59, microsecond=999999)
 
 class CustomReconciliationError(Exception):
     def __init__(self, message):
@@ -56,7 +63,6 @@ def get_username_from_request(request):
     user = request.user
     username = user.username
     return username
-
 
 class UploadedFilesViewset(viewsets.ModelViewSet):
     queryset = UploadedFile.objects.all()
@@ -111,9 +117,9 @@ class ReconcileView(APIView):
                     os.remove(temp_file_path)
 
                     data = {
-                        "reconciledRows": len(reconciled_data),
-                        "unreconciledRows": len(succunreconciled_data),
-                        "exceptionsRows": len(exceptions),
+                        "reconciledRows": len(reconciled_data) if reconciled_data is not None else 0,
+                        "unreconciledRows": len(succunreconciled_data) if succunreconciled_data is not None else 0,
+                        "exceptionsRows": len(exceptions) if exceptions is not None else 0, 
                         "feedback": feedback,
                         "RequestedRows": requestedRows,
                         "UploadedRows": UploadedRows,
@@ -143,15 +149,13 @@ class ReversalsView(generics.ListAPIView):
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
-        bank_code = get_bank_code_from_request(self.request)
-        print(bank_code)
+        bank_code = get_bank_code_from_request(self.request)        
 
         queryset = Transactions.objects.filter(
             Q(request_type__in=['1420', '1421']) &
             ~Q(txn_type__in=['BI', 'MINI']) & 
             ~Q(processing_code__in=['320000', '340000', '510000', '370000', '180000','360000']) & ~Q(amount='0') & 
-            (Q(issuer_code=bank_code) | Q(acquirer_code=bank_code)) #& Q(response_code__in=['91','991','998'])
-            # & Q(date_time=current_date) #& ~Q(amount='0') 
+            (Q(issuer_code=bank_code) | Q(acquirer_code=bank_code)) & ~Q(response_code='00') & Q(date_time=current_day) 
         ).annotate(
             Reversal_type=Case(
                 When(request_type='1420', then=Value('Reversal')),
@@ -161,7 +165,7 @@ class ReversalsView(generics.ListAPIView):
             ),
             Status=Case(
                 When(response_code=None, then=Value('Pending')),
-                When(response_code__in=['0', '00'], then=Value('Successful')),
+                When(response_code='00', then=Value('Successful')),
                 default=Value('Failed'),
                 output_field=CharField()
             )
