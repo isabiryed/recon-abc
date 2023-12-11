@@ -20,12 +20,14 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView
 )
+from users.views import ChangePasswordView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/',include('rest_framework.urls')),
     path('api/token/',TokenObtainPairView.as_view(),name="obtain_token_pair"),
     path('api/token/refresh/',TokenRefreshView.as_view(),name="token_refresh"),
+    path('api/auth/change_password/<int:pk>/',ChangePasswordView.as_view(),name="change_password"),
     path('api/', include('djoser.urls')),
     path('recon/',include('recon.urls')),
 ]
